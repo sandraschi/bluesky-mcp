@@ -1,0 +1,5 @@
+"""bluesky-mcp package."""
+
+from bluesky_mcp._version import __version__
+
+__all__ = ["__version__"]

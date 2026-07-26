@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "name": "bluesky-mcp",
+  "description": "FastMCP 3.4 Bluesky/AT Proto bridge with human-approved outbox for fleet-PR drafts. Dry-run default.",
+  "version": "0.1.0",
+  "categories": ["messaging", "comms", "fediverse", "promotion"],
+  "visibility": "private",
+  "tools": [
+    "bluesky_social_tool",
+    "bluesky_help",
+    "bluesky_shutdown"
+  ],
+  "transport": {
+    "type": "streamable-http",
+    "url": "http://127.0.0.1:10760/mcp"
+  },
+  "rest": {
+    "base_url": "http://127.0.0.1:10760",
+    "health": "/api/health"
+  },
+  "webapp": {
+    "url": "http://127.0.0.1:10761"
+  }
+}

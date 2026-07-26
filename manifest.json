@@ -1,0 +1,35 @@
+{
+  "manifest_version": "0.2",
+  "name": "bluesky-mcp",
+  "version": "0.1.0",
+  "description": "FastMCP 3.4+ Bluesky (AT Proto) bridge with human-approved outbox for fleet-PR drafts",
+  "author": {
+    "name": "Sandra Schieder"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "src/bluesky_mcp/__main__.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${PWD}", "python", "-m", "bluesky_mcp"],
+      "env": {
+        "PYTHONPATH": "${PWD}/src",
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "bluesky_social_tool",
+      "description": "Portmanteau: post, timeline, outbox_enqueue/approve/publish — dry-run default"
+    },
+    {
+      "name": "bluesky_help",
+      "description": "Help for bluesky-mcp operations and outbox flow"
+    },
+    {
+      "name": "bluesky_shutdown",
+      "description": "Graceful shutdown signal"
+    }
+  ]
+}
