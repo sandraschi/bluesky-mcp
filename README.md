@@ -4,15 +4,18 @@
   <a href="https://github.com/casey/just"><img src="https://img.shields.io/badge/just-ready_to_go-7c5cfc?style=flat-square&logo=just&logoColor=white" alt="Just"></a>
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
   <a href="https://github.com/PrefectHQ/fastmcp"><img src="https://img.shields.io/badge/FastMCP-3.4%2B-7c5cfc?style=flat-square" alt="FastMCP"></a>
+  <a href="https://github.com/sandraschi/bluesky-mcp/actions"><img src="https://img.shields.io/github/actions/workflow/status/sandraschi/bluesky-mcp/ci.yml?branch=master&style=flat-square" alt="CI"></a>
+  <a href="https://atproto.com/"><img src="https://img.shields.io/badge/AT%20Proto-Bluesky-0085FF?style=flat-square" alt="AT Proto"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="MIT"></a>
 </p>
 
-AT Proto (Bluesky / AT Proto) bridge for the sandraschi fleet — compose, timelines, and a **human-approved outbox** for promotion drafts from `fleet-public-relations-mcp`.
+**Bluesky / AT Proto** client — compose, timelines, and a **human-approved outbox** for promotion drafts from `fleet-public-relations-mcp`.
 
-**v0.1.1** · Private · Ports **10760** / **10761** · Sibling of [discord-mcp](https://github.com/sandraschi/discord-mcp)
+**v0.1.1** · Ports **10760** / **10761** · Sibling of [discord-mcp](https://github.com/sandraschi/discord-mcp) · ActivityPub sibling [mastodon-mcp](https://github.com/sandraschi/mastodon-mcp)
 
-> FastMCP 3.4+ · full portmanteau (reply/Repost/media/webhooks) · SOTA webapp · dry-run default · Windows CI workflow + local `just ci`
+> FastMCP 3.4+ · full portmanteau (reply/repost/media/webhooks) · SOTA webapp · dry-run default · Windows CI + local `just ci`
 
-> Bluesky = AT Proto. **Not** Bluesky.
+> Bluesky = AT Proto. **Not** Mastodon / ActivityPub.
 
 ---
 
