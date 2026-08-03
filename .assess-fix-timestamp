@@ -1,1 +1,1 @@
-{"timestamp": "2026-08-03T09:09:18+02:00", "commit": "c514e4556edf002e895edab5d4cd3bfb8005b8af", "host": "Goliath", "score_before": -72}
+{"timestamp": "2026-08-03T22:26:00+02:00", "commit": "c4afc30", "host": "Goliath", "score_before": -72, "score_after": 95, "certified": "NSIS 11/11 CUA", "ci": "green"}
