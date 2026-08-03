@@ -21,7 +21,9 @@ Live Bluesky needs `BLUESKY_INSTANCE` + `BLUESKY_ACCESS_TOKEN` (instance web/app
 | `isolated_data` fixture | `tests/conftest.py` | Temp `BLUESKY_DATA_DIR`, dry_run on, tokens cleared |
 | Empty notifications | dry_run + no token | `notifications: []` + explicit message — not fabricated inbox rows |
 | Webhook without secret | dry_run only | Inbound accepted only while dry_run; secret required for live |
-| Mock-until-onboarded UI | webapp when not configured | `lib/mockOnboarding.ts` — MOCK badges; Joe Mocky / Sandra Mockinger; cleared when `instance_configured` |
+
+The webapp shows **real data only** — unconfigured pages render honest empty states + a
+guided onboarding CTA (Settings → 4 steps). No mock/sample content ships.
 
 No undeclared `unittest.mock` / respx layers in this repo today. If you add HTTP mocks for live-path unit tests, name the fixture and add a row here.
 

@@ -4,67 +4,102 @@
 
 **bluesky-mcp** is an AT Proto bridge for the sandraschi fleet. Agents and `fleet-public-relations-mcp` enqueue promotion drafts into a **human-approved outbox**. You review, approve, then publish to Bluesky.
 
-It is **not** an auto-poster and **not** Mastodon/ActivityPub. Default mode is dry-run so nothing hits the public timeline until you say so.
+It is **not** an auto-poster and **not** Mastodon/ActivityPub. Default mode is dry-run so nothing hits the public timeline until you say so. The outbox (drafts, approve, dry-run publish) works with **zero credentials** — only live posting needs an account.
 
 ## Cost and accounts (money / CC)
 
 | Question | Answer |
 |----------|--------|
-| Do I need an account? | **Yes** — a Bluesky account (bsky.app or compatible PDS) |
+| Do I need an account? | **Yes** for live posting — a Bluesky account (bsky.social or a compatible PDS) |
 | Free tier? | **Yes** on bsky.social for typical personal use |
 | Credit card required? | **No** for a normal Bluesky account |
 | Ongoing cost? | Free for typical use; optional custom PDS hosting is separate |
 | Who bills? | Bluesky / your PDS host (if anyone) — not sandraschi / not this MCP |
 
-## Prerequisites outside this repo
+## Step 1 — Get Bluesky (download / install / account)
 
-- A Bluesky **handle** you control (e.g. `you.bsky.social`)
-- An **app password** from bsky.app → Settings → App Passwords (not your main login password)
-- Optional: `BLUESKY_WEBHOOK_SECRET` if other fleet tools POST to `/api/v1/webhooks/inbound`
+Bluesky is free and open (AT Protocol). Pick any one path — they all share the same account:
 
-Install tooling (uv, Node, git) is covered in [INSTALL.md](../INSTALL.md).
+| Path | Where | Notes |
+|------|-------|-------|
+| **Web** | [bsky.app](https://bsky.app) | Fastest — no install |
+| **iOS / iPadOS** | App Store → “Bluesky Social” | Same account as web |
+| **Android** | Google Play → “Bluesky Social” | Same account as web |
+| **Desktop** | [bsky.app](https://bsky.app) works in any browser; there is no official native Windows/macOS client — the web app is the desktop client | The MCP webapp dashboard is at `http://127.0.0.1:10761` and does not need the Bluesky app at all |
+| **Custom PDS** (advanced) | Self-hosted or third-party PDS | Same protocol; set `BLUESKY_PDS` to your instance URL |
 
-## First-timer setup steps
+1. Sign up at [bsky.app](https://bsky.app) — email + a handle (default `<you>.bsky.social`, or a custom domain later).
+2. If you plan to post from the phone apps later, install one and log in — otherwise the web account is enough.
+3. (Optional but recommended) set your profile: display name, avatar, and a starter “about” line. The fleet drafts will look better with a real profile behind them.
 
-1. Create or log into Bluesky in a browser.
-2. Open **Settings → Privacy and security → App Passwords** (wording may vary slightly).
-3. Create an app password named e.g. `bluesky-mcp`, copy it once.
-4. In the repo:
-   ```powershell
-   cd D:\Dev\repos\bluesky-mcp
-   Copy-Item .env.example .env
-   ```
-5. Edit `.env`:
-   - `BLUESKY_PDS=https://bsky.social` (or your custom PDS)
-   - `BLUESKY_HANDLE=you.bsky.social`
-   - `BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx`
-   - Keep `BLUESKY_DRY_RUN=1` until you intentionally go live
-6. Start: `.\start.bat` → dashboard http://127.0.0.1:10761
-7. Open **Settings** — confirm health shows configured (`instance_configured: true`).
-8. Enqueue a test draft on **Compose** or **Outbox**, approve, publish — expect `dry_run: true` until you set `BLUESKY_DRY_RUN=0`.
+## Step 2 — Create an app password
 
-## Pitfalls
+Bluesky requires a per-app password for third-party tools — **never** your login password.
 
-- **Dry-run default** — publish “succeeds” but does not post. Flip `BLUESKY_DRY_RUN=0` only when you mean it, then restart the backend.
-- **Direct `post` blocked** — fleet path is outbox → approve → publish (`BLUESKY_REQUIRE_OUTBOX_APPROVAL=1`).
-- **Main password vs app password** — createSession expects an **app password**, not your account password.
-- **Secrets in git** — never commit `.env`. Rotate the app password if it leaks.
-- **Tone** — fleet drafts follow `FLEET_PROMOTION.md` (no hype, no “written by AI” theater).
-- **Not Mastodon** — different protocol; do not paste Mastodon tokens into Bluesky fields.
+1. Log in at [bsky.app](https://bsky.app).
+2. Go to **Settings → Privacy and security → App Passwords** (direct: https://bsky.app/settings/app-passwords).
+3. **Add app password**, name it e.g. `bluesky-mcp`.
+4. Copy the generated `xxxx-xxxx-xxxx-xxxx` string **once** — it is shown a single time.
 
-## Sanity check
+## Step 3 — Configure the server
+
+```powershell
+cd D:\Dev\repos\bluesky-mcp
+Copy-Item .env.example .env
+```
+
+Edit `.env`:
+
+```ini
+BLUESKY_PDS=https://bsky.social        # or your custom PDS
+BLUESKY_HANDLE=you.bsky.social          # your handle, no @
+BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # app password from step 2
+BLUESKY_DRY_RUN=1                        # keep 1 until you mean it
+```
+
+Start:
+
+```powershell
+.\start.bat
+```
+
+Dashboard: **http://127.0.0.1:10761** · Backend: **http://127.0.0.1:10760**
+
+## Step 4 — Verify
 
 | Check | Expected |
 |-------|----------|
-| `GET http://127.0.0.1:10760/api/health` | `"instance_configured": true` when handle + app password set |
-| Settings page | Shows account configured; LLM probe is separate (optional) |
-| Outbox publish with dry_run | `"success": true`, `"dry_run": true`, message about not posted |
-| Inbox without credentials | Empty list + dry message — UI may show MOCK samples until onboarded |
+| `GET http://127.0.0.1:10760/api/health` | `"instance_configured": true` |
+| Settings page | Green “Backend” row + onboarding card disappears |
+| **Inbox** | Real Bluesky notifications (mentions / follows / boosts) appear |
+| **Timelines** | Fetch returns real home / local / public timelines |
+| Compose → Enqueue → Outbox → Approve → Publish | `"dry_run": true` — nothing posted yet |
 
-## Declared doubles
+## Step 5 — Go live (when ready)
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) § Declared doubles. Without finishing this onboarding, the server still runs: dry-run writes, empty notifications API, local outbox SQLite.
+1. Set `BLUESKY_DRY_RUN=0` in `.env`.
+2. Restart the backend.
+3. Dashboard badge flips from **DRY RUN** to **LIVE POSTING**.
+4. First live post: Compose a real draft → Outbox → Approve → Publish → verify it appears at your profile on [bsky.app](https://bsky.app).
 
-### Mock-until-onboarded (webapp)
+To go back to safety, set `BLUESKY_DRY_RUN=1` and restart.
 
-Until `instance_configured` is true, the dashboard shows a **big red** “Complete onboarding” button under the hero, plus **MOCK**-badged sample KPIs / outbox rows and inbox messages from **Joe Mocky** and **Sandra Mockinger**. Those UI samples are declared in `webapp/src/lib/mockOnboarding.ts` and disappear automatically after you set handle + app password — they are not live AT Proto data.
+## Pitfalls
+
+- **Dry-run default** — publish “succeeds” but does not post. Flip `BLUESKY_DRY_RUN=0` only when you mean it, then restart.
+- **Direct `post` blocked** — fleet path is outbox → approve → publish (`BLUESKY_REQUIRE_OUTBOX_APPROVAL=1`).
+- **Main password vs app password** — `createSession` expects an **app password**, not your account password.
+- **Secrets in git** — never commit `.env`. Rotate the app password if it leaks (App Passwords → revoke).
+- **Tone** — fleet drafts follow `FLEET_PROMOTION.md` (no hype, no “written by AI” theater).
+- **Not Mastodon** — Bluesky is AT Proto, not ActivityPub. Do not paste Mastodon tokens into Bluesky fields. See [FEDIVERSE.md](FEDIVERSE.md) for how both fit together.
+- **Wrong account** — if health says not configured after setup, check the handle has no `@` and the app password has no spaces.
+
+## What works before onboarding (honest list)
+
+With no credentials the server still runs fully for the local workflow:
+
+- Outbox: enqueue / list / approve / reject / **dry-run** publish (SQLite, no network)
+- Compose, Dashboard KPIs, Tools/Skills discovery, Chat (needs a local LLM), Settings, Help
+- Webhooks inbound/outbound
+
+Only live AT Proto calls (post, reply, boost, upload_media, timeline, notifications) require the account in Step 1–3.

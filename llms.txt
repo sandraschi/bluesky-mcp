@@ -7,6 +7,8 @@
 - [llms-full.txt](llms-full.txt) — tools, outbox flow, env, ports, safety
 - [README.md](README.md) — overview
 - [INSTALL.md](INSTALL.md) — install paths
+- [docs/ONBOARDING.md](docs/ONBOARDING.md) — account creation, app passwords, download links
+- [docs/FEDIVERSE.md](docs/FEDIVERSE.md) — AT Proto vs ActivityPub landscape
 - [PRD.md](PRD.md) — requirements + payload contract
 - [AGENTS.md](AGENTS.md) — agent guide
 - [CHANGELOG.md](CHANGELOG.md) — history

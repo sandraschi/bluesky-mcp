@@ -3,13 +3,10 @@ import {
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import clsx from "clsx";
 import { motion } from "framer-motion";
 import { Bell, Inbox as InboxIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import MockBadge from "../components/MockBadge";
 import { API } from "../lib/api";
-import { isOnboarded, MOCK_INBOX } from "../lib/mockOnboarding";
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 2, staleTime: 15_000 } },
@@ -21,7 +18,6 @@ type Notification = {
   account?: { display_name?: string; acct?: string };
   status?: { content?: string };
   created_at?: string;
-  _mock?: boolean;
 };
 
 function Inner() {
@@ -35,12 +31,10 @@ function Inner() {
     queryKey: ["notifications"],
     queryFn: () => fetch(API.notifications).then((r) => r.json()),
     refetchInterval: 30_000,
-    enabled: isOnboarded(health),
   });
 
-  const onboarded = isOnboarded(health);
-  const live: Notification[] = data?.notifications ?? [];
-  const notifications: Notification[] = onboarded ? live : MOCK_INBOX;
+  const configured = Boolean(health?.instance_configured);
+  const notifications: Notification[] = data?.notifications ?? [];
 
   return (
     <motion.div
@@ -56,36 +50,30 @@ function Inner() {
         </p>
       </div>
 
-      {!onboarded && (
+      {!configured && (
         <div
-          className="mb-4 rounded-xl border-2 border-dashed border-rose-500/50 bg-rose-950/30 p-4"
-          data-testid="mock-data-banner"
+          className="mb-4 rounded-xl border-2 border-red-500/50 bg-red-950/30 p-4"
+          data-testid="onboarding-banner"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <MockBadge />
-            <span className="text-sm font-medium text-rose-200">
-              Sample inbox — Joe Mocky &amp; Sandra Mockinger
-            </span>
-          </div>
           <p className="text-sm text-rose-100/80 mb-3">
-            These messages are fake and disappear after you connect a Bluesky
-            instance + token.
+            Notifications come from your Bluesky account. Connect one to see
+            mentions, follows and boosts here.
           </p>
           <Link
             to="/settings"
             className="inline-flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-500 px-4 py-2.5 text-sm font-bold text-white"
             data-testid="onboarding-cue"
           >
-            Complete onboarding
+            Connect Bluesky
           </Link>
         </div>
       )}
 
-      {onboarded && isLoading && (
+      {configured && isLoading && (
         <p className="text-sm text-zinc-400">Loading notifications…</p>
       )}
 
-      {onboarded && !isLoading && notifications.length === 0 && (
+      {configured && !isLoading && notifications.length === 0 && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-10 text-center">
           <Bell size={36} className="mx-auto mb-3 text-zinc-700" />
           <p className="text-sm text-zinc-400">No notifications yet.</p>
@@ -96,14 +84,10 @@ function Inner() {
         {notifications.map((n, i) => (
           <div
             key={n.id ?? i}
-            className={clsx(
-              "bg-zinc-900 border rounded-lg p-4",
-              n._mock ? "border-rose-500/40 border-dashed" : "border-zinc-800",
-            )}
-            data-testid={n._mock ? "mock-inbox-item" : "inbox-item"}
+            className="bg-zinc-900 border border-zinc-800 rounded-lg p-4"
+            data-testid="inbox-item"
           >
             <div className="flex items-center gap-2 mb-2 text-sm">
-              {n._mock && <MockBadge />}
               <InboxIcon size={14} className="text-violet-400" />
               <span className="text-violet-300">
                 {n.type ?? "notification"}

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.3 (2026-08-03) — real data + docs pass
+
+- **Mocks removed** — Dashboard/Outbox/Inbox always show real data (empty states instead of fake sample content); deleted `mockOnboarding.ts` + `MockBadge.tsx`; onboarding CTAs link to the guided flow
+- **Onboarding upgraded** — Settings now shows a 4-step guide (create account → app password → `.env` → restart) with direct links (bsky.app, App Passwords); `docs/ONBOARDING.md` rewritten with download/install/account flow for web/iOS/Android/custom PDS
+- **New `docs/FEDIVERSE.md`** — Bluesky/AT Proto vs ActivityPub fediverse explained: federation models, handles/DID, relay vs instance federation, fleet comms lane map (bluesky/mastodon/discord/email), cross-posting reality, glossary
+- **PRD.md rewritten** — executive summary, personas, goals/non-goals, functional requirements, outbox contract, safety model, architecture, data/security, testing, success metrics, roadmap (live-verification pass first), risks
+- **MCD project page** — `mcp-central-docs/projects/bluesky-mcp/README.md` created; row added to `FLEET_INDEX.md`
+- README/llms.txt link the new docs
+
 ## v0.1.2 (2026-08-03) — assfix pass
 
 ### Round 2 (fix all): NSIS build + certification

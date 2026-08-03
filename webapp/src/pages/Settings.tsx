@@ -100,22 +100,55 @@ function Inner() {
           className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4"
           data-testid="onboarding-cue"
         >
-          <p className="text-sm font-medium text-amber-200 mb-1">
-            Setup required — Bluesky handle + app password
+          <p className="text-sm font-medium text-amber-200 mb-2">
+            Setup required — connect a Bluesky account (free, no credit card)
           </p>
-          <p className="text-sm text-amber-100/80 mb-2">
-            Live posts need BLUESKY_HANDLE and BLUESKY_APP_PASSWORD. Free on
-            bsky.social (no credit card). Dry-run still works without them.
-          </p>
+          <ol className="text-sm text-amber-100/80 space-y-1.5 mb-2 list-decimal list-inside">
+            <li>
+              Create an account at{" "}
+              <a
+                href="https://bsky.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-amber-50"
+              >
+                bsky.app
+              </a>{" "}
+              (or the Bluesky app on iOS / Android / desktop)
+            </li>
+            <li>
+              In Settings → Privacy and security →{" "}
+              <a
+                href="https://bsky.app/settings/app-passwords"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-amber-50"
+              >
+                App Passwords
+              </a>{" "}
+              create one named e.g.{" "}
+              <code className="font-mono">bluesky-mcp</code> and copy it once
+            </li>
+            <li>
+              Set in <code className="font-mono">.env</code>:{" "}
+              <code className="font-mono">BLUESKY_HANDLE=you.bsky.social</code>{" "}
+              and{" "}
+              <code className="font-mono">
+                BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+              </code>{" "}
+              (never your main password)
+            </li>
+            <li>
+              Restart the backend (
+              <code className="font-mono">.\start.bat</code>) — this page flips
+              to “Instance configured”
+            </li>
+          </ol>
           <p className="text-sm text-zinc-400">
-            Follow{" "}
-            <span className="text-violet-300 font-mono text-sm">
-              docs/ONBOARDING.md
-            </span>{" "}
-            (what this is for, money/CC, pitfalls) — then set{" "}
-            <span className="font-mono text-sm">BLUESKY_INSTANCE</span> and{" "}
-            <span className="font-mono text-sm">BLUESKY_ACCESS_TOKEN</span> in{" "}
-            <span className="font-mono text-sm">.env</span> and restart.{" "}
+            Dry-run works without any of this: drafts, approve, and publish only
+            write locally until you set{" "}
+            <code className="font-mono">BLUESKY_DRY_RUN=0</code>. Full guide:
+            docs/ONBOARDING.md ·{" "}
             <Link to="/help" className="text-violet-400 hover:underline">
               Help page
             </Link>

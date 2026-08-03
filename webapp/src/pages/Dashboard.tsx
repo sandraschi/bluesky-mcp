@@ -16,13 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import MockBadge from "../components/MockBadge";
 import { API } from "../lib/api";
-import {
-  isOnboarded,
-  MOCK_KPIS,
-  MOCK_OUTBOX_RECENT,
-} from "../lib/mockOnboarding";
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 2, staleTime: 10_000 } },
@@ -33,7 +27,6 @@ type OutboxItem = {
   status: string;
   repo_id: string;
   status_text: string;
-  _mock?: boolean;
 };
 
 function StatCard({
@@ -41,29 +34,19 @@ function StatCard({
   value,
   icon: Icon,
   color,
-  mock,
   ...rest
 }: {
   label: string;
   value: string;
   icon: React.ElementType;
   color: string;
-  mock?: boolean;
   [key: string]: unknown;
 }) {
   return (
     <div
-      className={clsx(
-        "bg-zinc-900 border rounded-lg p-4 relative",
-        mock ? "border-rose-500/40 border-dashed" : "border-zinc-800",
-      )}
+      className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 relative"
       {...rest}
     >
-      {mock && (
-        <div className="absolute top-2 right-2">
-          <MockBadge />
-        </div>
-      )}
       <div className="flex items-center gap-2 mb-2">
         <Icon size={16} className={color} />
         <span className="text-sm text-zinc-400">{label}</span>
@@ -81,20 +64,16 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
   });
 
   const dryRun = dash?.dry_run ?? true;
-  const onboarded = isOnboarded(dash);
-  const kpis = onboarded
-    ? {
-        pending: dash?.pending ?? 0,
-        approved: dash?.approved ?? 0,
-        published: dash?.published ?? 0,
-        rejected: dash?.rejected ?? 0,
-        total: dash?.total ?? 0,
-      }
-    : MOCK_KPIS;
+  const configured = dash?.instance_configured ?? false;
+  const kpis = {
+    pending: dash?.pending ?? 0,
+    approved: dash?.approved ?? 0,
+    published: dash?.published ?? 0,
+    rejected: dash?.rejected ?? 0,
+    total: dash?.total ?? 0,
+  };
 
-  const recent: OutboxItem[] = onboarded
-    ? ((dash?.recent as OutboxItem[]) ?? [])
-    : MOCK_OUTBOX_RECENT;
+  const recent: OutboxItem[] = (dash?.recent as OutboxItem[]) ?? [];
 
   return (
     <motion.div
@@ -134,7 +113,7 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
                 {dryRun ? "DRY RUN" : "LIVE POSTING"}
               </span>
               <span className="text-sm text-zinc-400">
-                {onboarded ? "Instance configured" : "No Bluesky token yet"}
+                {configured ? "Instance configured" : "No Bluesky token yet"}
               </span>
             </div>
           </div>
@@ -148,25 +127,15 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
         </div>
       </div>
 
-      {!onboarded && (
+      {!configured && (
         <Link
           to="/settings"
           className="mb-8 flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-6 py-4 text-lg font-bold text-white shadow-lg shadow-red-900/40 hover:bg-red-500 transition-colors border-2 border-red-400/50"
           data-testid="onboarding-cue"
         >
-          Complete onboarding — connect Bluesky
+          Connect Bluesky — create account + app password
           <ArrowRight size={22} />
         </Link>
-      )}
-
-      {!onboarded && (
-        <p
-          className="text-sm text-rose-300/90 mb-3 flex items-center gap-2"
-          data-testid="mock-data-banner"
-        >
-          <MockBadge /> Sample KPIs and lists below — cleared after you set
-          instance + token.
-        </p>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
@@ -176,7 +145,6 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
           value={String(kpis.pending)}
           icon={Inbox}
           color="text-amber-400"
-          mock={!onboarded}
         />
         <StatCard
           data-testid="kpi-approved"
@@ -184,7 +152,6 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
           value={String(kpis.approved)}
           icon={CheckCircle}
           color="text-emerald-400"
-          mock={!onboarded}
         />
         <StatCard
           data-testid="kpi-published"
@@ -192,7 +159,6 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
           value={String(kpis.published)}
           icon={Send}
           color="text-violet-400"
-          mock={!onboarded}
         />
         <StatCard
           data-testid="kpi-rejected"
@@ -200,7 +166,6 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
           value={String(kpis.rejected)}
           icon={XCircle}
           color="text-red-400"
-          mock={!onboarded}
         />
         <StatCard
           data-testid="kpi-total"
@@ -208,7 +173,6 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
           value={String(kpis.total)}
           icon={Archive}
           color="text-zinc-400"
-          mock={!onboarded}
         />
         <StatCard
           data-testid="kpi-backend"
@@ -221,23 +185,16 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
 
       {recent.length > 0 ? (
         <div>
-          <h2 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-medium text-zinc-400 mb-3">
             Recent outbox
-            {!onboarded && <MockBadge />}
           </h2>
           <div className="space-y-2">
             {recent.slice(0, 6).map((it) => (
               <div
                 key={it.id}
-                className={clsx(
-                  "bg-zinc-900 border rounded-lg px-4 py-3",
-                  it._mock
-                    ? "border-rose-500/40 border-dashed"
-                    : "border-zinc-800",
-                )}
+                className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  {it._mock && <MockBadge />}
                   <span className="text-sm font-mono text-zinc-400">
                     #{it.id}
                   </span>

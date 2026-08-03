@@ -80,14 +80,15 @@ Claude Desktop / Cursor MCP config (stdio):
 | Doc | Contents |
 |-----|----------|
 | [INSTALL.md](INSTALL.md) | Install paths |
-| [docs/ONBOARDING.md](docs/ONBOARDING.md) | First-timer: account, money/CC, pitfalls, sanity check |
+| [docs/ONBOARDING.md](docs/ONBOARDING.md) | First-timer: account creation, app passwords, download links, verify |
+| [docs/FEDIVERSE.md](docs/FEDIVERSE.md) | Bluesky / AT Proto vs ActivityPub — where this server sits |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars |
 | [docs/TOOLS.md](docs/TOOLS.md) | MCP + REST reference |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Lint, `just ci`, packaging |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptom → fix |
+| [PRD.md](PRD.md) | Product requirements + roadmap |
 | [llms.txt](llms.txt) / [llms-full.txt](llms-full.txt) | LLM index + full corpus |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
-| [PRD.md](PRD.md) | Requirements + payload contract |
 
 ---
 
