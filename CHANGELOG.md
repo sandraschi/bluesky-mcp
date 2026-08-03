@@ -4,6 +4,8 @@
 
 ### Round 2 (fix all): NSIS build + certification
 
+- **CI fix**: dev deps consolidated into `[dependency-groups] dev` (uv `add --dev` had split pre-commit into a second group → fleet-ci synced only pre-commit → ruff missing). All tools (ruff/pyright/pytest/pyinstaller/pre-commit) now install via plain `uv sync`
+
 - **First certified NSIS build**: `Bluesky MCP_0.1.1_x64-setup.exe` (28.8 MB), `just cua-nsis-test` 11/11 phases PASS (install → backend health → feature route → diagnostics → uninstall). See `BUILD_LOG.md`
 - **Fixed operator self-kill**: `backend.rs free_port()` killed the operator's own image (`bluesky-mcp-native` matched its own process name → app exited -1 ~8s after launch)
 - **Fixed runt PyInstaller exe**: `uv run pyinstaller` fell back to a uv ephemeral env (missing site-packages → 10.4 MB exe without httpx/fastapi). build.ps1 now runs `.venv\Scripts\pyinstaller.exe` explicitly with install fallback
