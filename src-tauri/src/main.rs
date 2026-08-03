@@ -1,8 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod backend;
-use backend::{BackendProcess, spawn_backend};
+use backend::{spawn_backend, BackendProcess};
 use tauri::{Emitter, Manager};
+
+#[tauri::command]
+fn start_backend(app: tauri::AppHandle, state: tauri::State<'_, BackendProcess>) -> Result<String, String> {
+    spawn_backend(app, &state)
+}
 
 fn main() {
     tauri::Builder::default()
@@ -10,6 +15,7 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .manage(BackendProcess(std::sync::Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![start_backend])
         .setup(|app| {
             let handle = app.handle().clone();
             if let Err(e) = spawn_backend(handle.clone(), app.state::<BackendProcess>().inner()) {

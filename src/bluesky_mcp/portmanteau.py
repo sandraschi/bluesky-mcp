@@ -8,6 +8,7 @@ from pydantic import Field
 
 from bluesky_mcp import client, outbox, webhooks
 from bluesky_mcp.config import get_settings
+from bluesky_mcp.responses import err_response
 
 OPS = [
     "post",
@@ -87,22 +88,22 @@ async def bluesky_social(
 
     if op == "outbox_approve":
         if not outbox_id:
-            return {"success": False, "error": "outbox_id required"}
+            return err_response("outbox_id required", "validation")
         return outbox.approve(outbox_id)
 
     if op == "outbox_reject":
         if not outbox_id:
-            return {"success": False, "error": "outbox_id required"}
+            return err_response("outbox_id required", "validation")
         return outbox.reject(outbox_id, reason)
 
     if op == "outbox_publish":
         if not outbox_id:
-            return {"success": False, "error": "outbox_id required"}
+            return err_response("outbox_id required", "validation")
         row = outbox.get_item(outbox_id)
         if not row:
-            return {"success": False, "error": "not found"}
+            return err_response("not found", "not_found")
         if row["status"] != "approved":
-            return {"success": False, "error": "must be approved before publish"}
+            return err_response("must be approved before publish", "state")
         result = await client.create_status(
             row["status_text"],
             visibility=row.get("visibility") or "public",
@@ -118,13 +119,11 @@ async def bluesky_social(
 
     if op == "post":
         if cfg.require_outbox_approval and not outbox_id:
-            return {
-                "success": False,
-                "error": (
-                    "direct post blocked — enqueue to outbox, approve, then outbox_publish "
-                    "(or set BLUESKY_REQUIRE_OUTBOX_APPROVAL=0 for interactive compose)"
-                ),
-            }
+            return err_response(
+                "direct post blocked — enqueue to outbox, approve, then outbox_publish "
+                "(or set BLUESKY_REQUIRE_OUTBOX_APPROVAL=0 for interactive compose)",
+                "approval_required",
+            )
         if outbox_id:
             return await bluesky_social(
                 operation="outbox_publish", outbox_id=outbox_id, dry_run=dry_run
@@ -180,14 +179,14 @@ async def bluesky_social(
 
     if op == "webhook_receive":
         if not payload:
-            return {"success": False, "error": "payload required"}
+            return err_response("payload required", "validation")
         return webhooks.enqueue_event(source or "agent", event_type, payload)
 
     if op == "push_subscription_get":
         return await client.push_subscription_get()
 
-    return {
-        "success": False,
-        "error": f"unknown operation {operation!r}",
-        "operations": OPS,
-    }
+    return err_response(
+        f"unknown operation {operation!r}",
+        "unknown_operation",
+        operations=OPS,
+    )

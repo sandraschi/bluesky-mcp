@@ -20,6 +20,8 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import HelpModal from "./components/HelpModal";
 import LoggerModal from "./components/LoggerModal";
+import { API } from "./lib/api";
+import { useZoom } from "./lib/use-zoom";
 import Accounts from "./pages/Accounts";
 import Chat from "./pages/Chat";
 import Compose from "./pages/Compose";
@@ -48,7 +50,7 @@ const NAV = [
 
 async function checkBackendHealth(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const r = await fetch("/api/health");
+    const r = await fetch(API.health);
     if (!r.ok) return { ok: false, error: `HTTP ${r.status}` };
     return { ok: true };
   } catch (e) {
@@ -59,9 +61,13 @@ async function checkBackendHealth(): Promise<{ ok: boolean; error?: string }> {
   }
 }
 
+const BACKOFF = [1000, 2000, 4000, 8000, 16000, 30000];
+
 export default function App() {
+  useZoom();
   const [collapsed, setCollapsed] = useState(false);
   const [backendOk, setBackendOk] = useState<boolean | null>(null);
+  const [restarting, setRestarting] = useState(false);
   const [loggerOpen, setLoggerOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -72,9 +78,55 @@ export default function App() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 10_000);
-    return () => clearInterval(interval);
+    let timer: ReturnType<typeof setTimeout>;
+    let attempt = 0;
+    const poll = () => {
+      timer = setTimeout(
+        async () => {
+          await refresh();
+          attempt += 1;
+          if (attempt < BACKOFF.length) poll();
+        },
+        BACKOFF[Math.min(attempt, BACKOFF.length - 1)],
+      );
+    };
+    poll();
+    return () => clearTimeout(timer);
   }, [refresh]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    (async () => {
+      try {
+        const { listen } = await import("@tauri-apps/api/event");
+        unlisten = await listen<string>("backend-status", (event) => {
+          if (event.payload === "ready") {
+            refresh();
+          } else if (
+            typeof event.payload === "string" &&
+            event.payload.startsWith("error:")
+          ) {
+            setBackendOk(false);
+          }
+        });
+      } catch {
+        /* not inside Tauri — HTTP polling handles it */
+      }
+    })();
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [refresh]);
+
+  const restartBackend = useCallback(async () => {
+    setRestarting(true);
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      await invoke("start_backend");
+    } catch {
+      setRestarting(false); // not in Tauri — HTTP poll will update
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -114,7 +166,7 @@ export default function App() {
             </div>
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
+              className="p-1 text-zinc-400 hover:text-zinc-300 transition-colors shrink-0"
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {collapsed ? (
@@ -177,8 +229,18 @@ export default function App() {
                 </span>
               )}
             </div>
+            {!collapsed && backendOk === false && (
+              <button
+                onClick={restartBackend}
+                disabled={restarting}
+                data-testid="restart-backend"
+                className="mt-1.5 w-full text-sm px-2 py-1 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+              >
+                {restarting ? "Restarting..." : "Restart Backend"}
+              </button>
+            )}
             {!collapsed && (
-              <p className="text-[10px] text-zinc-600 mt-1.5">
+              <p className="text-sm text-zinc-400 mt-1.5">
                 dry-run default · human approve
               </p>
             )}

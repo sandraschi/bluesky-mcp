@@ -1,5 +1,6 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { API } from "../lib/api";
 
 export default function Compose() {
   const [text, setText] = useState("");
@@ -9,7 +10,7 @@ export default function Compose() {
   const [assistErr, setAssistErr] = useState("");
 
   const enqueue = async () => {
-    const r = await fetch("/api/v1/outbox", {
+    const r = await fetch(API.outbox, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -27,7 +28,7 @@ export default function Compose() {
     setAssisting(true);
     setAssistErr("");
     try {
-      const r = await fetch("/api/compose/assist", {
+      const r = await fetch(API.composeAssist, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +55,7 @@ export default function Compose() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-xl font-semibold mb-1">Compose</h1>
-      <p className="text-sm text-zinc-500 mb-4">
+      <p className="text-sm text-zinc-400 mb-4">
         Enqueues to outbox — does not post directly.
       </p>
 
@@ -99,7 +100,7 @@ export default function Compose() {
 
       {assistErr && <p className="text-sm text-amber-400 mt-3">{assistErr}</p>}
       {result && (
-        <pre className="mt-4 text-xs text-zinc-500 whitespace-pre-wrap">
+        <pre className="mt-4 text-xs text-zinc-400 whitespace-pre-wrap">
           {result}
         </pre>
       )}

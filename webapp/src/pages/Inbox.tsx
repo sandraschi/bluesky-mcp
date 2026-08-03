@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Bell, Inbox as InboxIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import MockBadge from "../components/MockBadge";
+import { API } from "../lib/api";
 import { isOnboarded, MOCK_INBOX } from "../lib/mockOnboarding";
 
 const qc = new QueryClient({
@@ -26,13 +27,13 @@ type Notification = {
 function Inner() {
   const { data: health } = useQuery({
     queryKey: ["health"],
-    queryFn: () => fetch("/api/health").then((r) => r.json()),
+    queryFn: () => fetch(API.health).then((r) => r.json()),
     refetchInterval: 15_000,
   });
 
   const { data, isLoading } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => fetch("/api/v1/notifications").then((r) => r.json()),
+    queryFn: () => fetch(API.notifications).then((r) => r.json()),
     refetchInterval: 30_000,
     enabled: isOnboarded(health),
   });
@@ -50,7 +51,7 @@ function Inner() {
     >
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-zinc-100">Inbox</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-zinc-400 mt-0.5">
           Bluesky notifications — mentions, follows, boosts.
         </p>
       </div>
@@ -81,13 +82,13 @@ function Inner() {
       )}
 
       {onboarded && isLoading && (
-        <p className="text-sm text-zinc-500">Loading notifications…</p>
+        <p className="text-sm text-zinc-400">Loading notifications…</p>
       )}
 
       {onboarded && !isLoading && notifications.length === 0 && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-10 text-center">
           <Bell size={36} className="mx-auto mb-3 text-zinc-700" />
-          <p className="text-sm text-zinc-500">No notifications yet.</p>
+          <p className="text-sm text-zinc-400">No notifications yet.</p>
         </div>
       )}
 
@@ -107,7 +108,7 @@ function Inner() {
               <span className="text-violet-300">
                 {n.type ?? "notification"}
               </span>
-              <span className="text-zinc-500 ml-auto">
+              <span className="text-zinc-400 ml-auto">
                 {n.created_at?.slice(0, 19) ?? ""}
               </span>
             </div>
@@ -115,7 +116,7 @@ function Inner() {
               <p className="text-sm text-zinc-400 mb-1">
                 @{n.account.acct ?? n.account.display_name}
                 {n.account.display_name && (
-                  <span className="text-zinc-500">
+                  <span className="text-zinc-400">
                     {" "}
                     ({n.account.display_name})
                   </span>

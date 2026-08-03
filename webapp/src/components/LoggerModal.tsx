@@ -1,5 +1,6 @@
 import { Download, Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API } from "../lib/api";
 
 type LogEntry = {
   id: string;
@@ -14,7 +15,7 @@ const LEVEL_COLORS: Record<string, string> = {
   ERROR: "text-red-400 bg-red-950/40",
   WARNING: "text-yellow-400 bg-yellow-950/40",
   INFO: "text-violet-300 bg-violet-950/30",
-  DEBUG: "text-zinc-500 bg-zinc-900/30",
+  DEBUG: "text-zinc-400 bg-zinc-900/30",
 };
 
 export default function LoggerModal({
@@ -38,7 +39,7 @@ export default function LoggerModal({
     if (level) params.set("level", level);
     if (search) params.set("search", search);
     try {
-      const r = await fetch(`/api/logs?${params}`);
+      const r = await fetch(`${API.logs}?${params}`);
       const d = await r.json();
       setEntries(d.entries || []);
     } catch {
@@ -100,13 +101,13 @@ export default function LoggerModal({
             <div className="relative">
               <Search
                 size={14}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500"
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400"
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="h-7 w-40 rounded border border-zinc-700 bg-zinc-800 pl-7 pr-2 text-sm text-zinc-300 placeholder:text-zinc-500"
+                className="h-7 w-40 rounded border border-zinc-700 bg-zinc-800 pl-7 pr-2 text-sm text-zinc-300 placeholder:text-zinc-400"
               />
             </div>
             <button
@@ -154,7 +155,7 @@ export default function LoggerModal({
               >
                 {e.level}
               </span>
-              <span className="text-zinc-500 w-20 shrink-0 truncate">
+              <span className="text-zinc-400 w-20 shrink-0 truncate">
                 {e.kind}
               </span>
               <span className="text-zinc-300">{e.detail}</span>

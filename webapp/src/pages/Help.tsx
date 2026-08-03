@@ -182,7 +182,7 @@ export default function Help() {
             className={
               tab === t
                 ? "px-4 py-2 text-sm font-medium text-violet-300 border-b-2 border-violet-400"
-                : "px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-300"
+                : "px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-300"
             }
           >
             {t}

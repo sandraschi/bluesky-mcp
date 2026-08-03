@@ -6,6 +6,7 @@ import {
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { AlertCircle, Terminal, Wrench } from "lucide-react";
+import { API } from "../lib/api";
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 2, staleTime: 60_000 } },
@@ -21,7 +22,7 @@ type ToolEntry = {
 function Inner() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["tools"],
-    queryFn: () => fetch("/api/tools").then((r) => r.json()),
+    queryFn: () => fetch(API.tools).then((r) => r.json()),
   });
 
   const tools: ToolEntry[] = data?.tools ?? [];
@@ -31,10 +32,11 @@ function Inner() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="p-6 max-w-4xl pb-8"
+      data-testid="tools-page"
     >
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-zinc-100">Tools</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-zinc-400 mt-0.5">
           Portmanteau and solo tools registered on the Bluesky MCP server
         </p>
       </div>
@@ -46,13 +48,14 @@ function Inner() {
         </div>
       )}
 
-      {isLoading && <p className="text-sm text-zinc-500">Loading tools…</p>}
+      {isLoading && <p className="text-sm text-zinc-400">Loading tools…</p>}
 
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="tools-list">
         {tools.map((t) => (
           <div
             key={t.name}
             className="bg-zinc-900 border border-zinc-800 rounded-xl p-5"
+            data-testid="tools-item"
           >
             <div className="flex items-start gap-3 mb-3">
               {t.kind === "portmanteau" ? (
@@ -67,7 +70,7 @@ function Inner() {
                   </span>
                   <span
                     className={clsx(
-                      "text-xs px-2 py-0.5 rounded",
+                      "text-sm px-2 py-0.5 rounded",
                       t.kind === "portmanteau" &&
                         "bg-violet-500/20 text-violet-400",
                       t.kind === "solo" && "bg-zinc-700/50 text-zinc-400",
@@ -79,20 +82,20 @@ function Inner() {
                   </span>
                 </div>
                 {t.description && (
-                  <p className="text-sm text-zinc-500 mt-1">{t.description}</p>
+                  <p className="text-sm text-zinc-400 mt-1">{t.description}</p>
                 )}
               </div>
             </div>
             {t.operations && t.operations.length > 0 && (
               <div>
-                <p className="text-xs text-zinc-600 mb-2 uppercase tracking-wide">
+                <p className="text-sm text-zinc-400 mb-2 uppercase tracking-wide">
                   Operations
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {t.operations.map((op) => (
                     <span
                       key={op}
-                      className="font-mono text-xs px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300"
+                      className="font-mono text-sm px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300"
                     >
                       {op}
                     </span>
@@ -104,7 +107,7 @@ function Inner() {
         ))}
       </div>
 
-      <p className="text-xs text-zinc-600 mt-6 font-mono">
+      <p className="text-sm text-zinc-400 mt-6 font-mono">
         MCP HTTP: http://127.0.0.1:10760/mcp
       </p>
     </motion.div>

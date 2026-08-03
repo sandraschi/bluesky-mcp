@@ -5,7 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { CheckCircle, Cpu, Loader2, XCircle } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API } from "../lib/api";
 import { LLM_PROVIDERS, probeProviders } from "../lib/provider";
 import { useLLMStore } from "../store/llm";
 
@@ -15,10 +17,16 @@ const qc = new QueryClient({
 
 function Inner() {
   const setOllamaUrl = useLLMStore((s) => s.setOllamaUrl);
+  const [llmProvider, setLlmProvider] = useState<string>(
+    () => localStorage.getItem("llm_provider") || "",
+  );
+  const [llmModel, setLlmModel] = useState<string>(
+    () => localStorage.getItem("llm_model") || "",
+  );
 
   const { data: health } = useQuery({
     queryKey: ["health"],
-    queryFn: () => fetch("/api/health").then((r) => r.json()),
+    queryFn: () => fetch(API.health).then((r) => r.json()),
     refetchInterval: 30_000,
   });
 
@@ -33,14 +41,15 @@ function Inner() {
     refetchInterval: 60_000,
   });
 
-  const activeProvider = LLM_PROVIDERS.find(
-    (p) => providers?.providers?.[p.name]?.detected,
-  );
+  const activeProvider =
+    LLM_PROVIDERS.find(
+      (p) => p.name === llmProvider && providers?.providers?.[p.name]?.detected,
+    ) ?? LLM_PROVIDERS.find((p) => providers?.providers?.[p.name]?.detected);
 
   const providerStatus = (name: string) => {
     const p = providers?.providers?.[name];
     if (!providers || probing)
-      return { icon: Loader2, color: "text-zinc-500", label: "Probing..." };
+      return { icon: Loader2, color: "text-zinc-400", label: "Probing..." };
     if (p?.detected)
       return {
         icon: CheckCircle,
@@ -75,7 +84,7 @@ function Inner() {
     >
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Settings</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-zinc-400 mt-0.5">
           Server status, LLM providers, and environment
         </p>
       </div>
@@ -94,13 +103,13 @@ function Inner() {
           </p>
           <p className="text-sm text-zinc-400">
             Follow{" "}
-            <span className="text-violet-300 font-mono text-xs">
+            <span className="text-violet-300 font-mono text-sm">
               docs/ONBOARDING.md
             </span>{" "}
             (what this is for, money/CC, pitfalls) — then set{" "}
-            <span className="font-mono text-xs">BLUESKY_INSTANCE</span> and{" "}
-            <span className="font-mono text-xs">BLUESKY_ACCESS_TOKEN</span> in{" "}
-            <span className="font-mono text-xs">.env</span> and restart.{" "}
+            <span className="font-mono text-sm">BLUESKY_INSTANCE</span> and{" "}
+            <span className="font-mono text-sm">BLUESKY_ACCESS_TOKEN</span> in{" "}
+            <span className="font-mono text-sm">.env</span> and restart.{" "}
             <Link to="/help" className="text-violet-400 hover:underline">
               Help page
             </Link>
@@ -115,12 +124,12 @@ function Inner() {
           ) : (
             <Loader2
               size={16}
-              className="text-zinc-500 animate-spin shrink-0"
+              className="text-zinc-400 animate-spin shrink-0"
             />
           )}
           <div>
             <p className="text-sm text-zinc-200">Backend</p>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-400">
               {health ? `${health.server} v${health.version}` : "Checking..."}
             </p>
           </div>
@@ -143,6 +152,28 @@ function Inner() {
         >
           LLM Providers
         </h2>
+        <div className="mb-3">
+          <select
+            data-testid="llm-provider-select"
+            value={activeProvider?.name ?? ""}
+            onChange={(e) => {
+              setLlmProvider(e.target.value);
+              localStorage.setItem("llm_provider", e.target.value);
+              const p = LLM_PROVIDERS.find((x) => x.name === e.target.value);
+              if (p) setOllamaUrl(`http://localhost:${p.port}`);
+            }}
+            className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-300"
+          >
+            {!activeProvider && <option value="">No local LLM detected</option>}
+            {LLM_PROVIDERS.filter(
+              (p) => providers?.providers?.[p.name]?.detected,
+            ).map((p) => (
+              <option key={p.name} value={p.name}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="space-y-2">
           {LLM_PROVIDERS.map((p) => {
             const status = providerStatus(p.name);
@@ -157,10 +188,10 @@ function Inner() {
                   <Icon size={16} className={`${status.color} shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-zinc-200">{p.name}</p>
-                    <p className="text-sm text-zinc-500">{status.label}</p>
+                    <p className="text-sm text-zinc-400">{status.label}</p>
                   </div>
                   {models && models.length > 0 && (
-                    <span className="text-xs text-zinc-500 shrink-0">
+                    <span className="text-sm text-zinc-400 shrink-0">
                       {models.length} models
                     </span>
                   )}
@@ -170,8 +201,12 @@ function Inner() {
                   models.length > 0 && (
                     <select
                       data-testid="llm-model-select"
-                      className="mt-2 w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 font-mono"
-                      defaultValue={models[0]}
+                      className="mt-2 w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-300 font-mono"
+                      value={models.includes(llmModel) ? llmModel : models[0]}
+                      onChange={(e) => {
+                        setLlmModel(e.target.value);
+                        localStorage.setItem("llm_model", e.target.value);
+                      }}
                     >
                       {models.map((m) => (
                         <option key={m} value={m}>
@@ -220,13 +255,13 @@ function Inner() {
         <div className="space-y-2 text-sm font-mono">
           {envRows.map(([key, val]) => (
             <div key={key} className="flex gap-2">
-              <span className="text-zinc-500 w-48 shrink-0">{key}</span>
+              <span className="text-zinc-400 w-48 shrink-0">{key}</span>
               <span className="text-zinc-400 truncate">{val}</span>
             </div>
           ))}
         </div>
-        <p className="text-xs text-zinc-600 mt-3">
-          Edit <code className="text-zinc-500">.env</code> in repo root. Never
+        <p className="text-sm text-zinc-400 mt-3">
+          Edit <code className="text-zinc-400">.env</code> in repo root. Never
           commit secrets.
         </p>
       </div>

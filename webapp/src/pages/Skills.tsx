@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import { API } from "../lib/api";
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 2, staleTime: 60_000 } },
@@ -24,7 +25,7 @@ type SkillEntry = {
 function Inner() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["skills"],
-    queryFn: () => fetch("/api/skills").then((r) => r.json()),
+    queryFn: () => fetch(API.skills).then((r) => r.json()),
   });
 
   const skills: SkillEntry[] = data?.skills ?? [];
@@ -37,10 +38,11 @@ function Inner() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="p-6 max-w-4xl pb-8"
+      data-testid="skills-page"
     >
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-zinc-100">Skills</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-zinc-400 mt-0.5">
           Bundled SKILL.md files exposed to MCP clients as{" "}
           <span className="font-mono text-zinc-400">skill://name/SKILL.md</span>
         </p>
@@ -56,20 +58,20 @@ function Inner() {
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
         <div className="flex items-center gap-3 mb-4">
           <BookMarked className="w-6 h-6 text-violet-400" />
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-400" data-testid="skills-count">
             {data?.count ?? 0} skill(s) on server
           </p>
         </div>
 
-        {isLoading && <p className="text-sm text-zinc-500">Loading skills…</p>}
+        {isLoading && <p className="text-sm text-zinc-400">Loading skills…</p>}
 
         {!isLoading && skills.length === 0 && (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             No skills found under src/bluesky_mcp/skills/
           </p>
         )}
 
-        <ul className="space-y-3">
+        <ul className="space-y-3" data-testid="skills-list">
           {skills.map((s) => (
             <li
               key={s.name}
@@ -84,9 +86,9 @@ function Inner() {
                   {s.name}
                 </span>
                 {expanded === s.name ? (
-                  <ChevronDown className="w-4 h-4 text-zinc-500" />
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-zinc-500" />
+                  <ChevronRight className="w-4 h-4 text-zinc-400" />
                 )}
               </button>
               {expanded === s.name && (

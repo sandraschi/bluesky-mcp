@@ -1,0 +1,22 @@
+{
+  "product_name": "Bluesky MCP",
+  "install_dir": "%LOCALAPPDATA%\\Bluesky MCP",
+  "operator_exe": "bluesky-mcp-native.exe",
+  "backend_process_names": ["bluesky-mcp-native", "bluesky-mcp-backend"],
+  "backend_port": 10760,
+  "frontend_port": 10761,
+  "health_path": "/api/health",
+  "diagnostics_path": "/api/v1/diagnostics",
+  "feature_smoke_path": "/api/health",
+  "window_title_re": "Bluesky MCP",
+  "nsis_glob": "src-tauri/target/release/bundle/nsis/Bluesky MCP_*_x64-setup.exe",
+  "bridge_ok_text": "Bluesky MCP",
+  "uninstall_registry_filter": "*Bluesky*MCP*",
+  "nav_routes": [["Dashboard","DRY RUN"],["Inbox","Inbox"],["Outbox","Outbox"],["Compose","Compose"],["Timelines","Timelines"],["Tools","Tools"],["Skills","Skills"],["Chat","Chat"],["Accounts","Accounts"],["Settings","Settings"],["Help","Help"]],
+  "sidebar_click_x": 30,
+  "sidebar_first_y": 90,
+  "sidebar_step_y": 55,
+  "connected_badge_text": "Backend online",
+  "backend_module": "bluesky_mcp.server",
+  "log_file_paths": ["%LOCALAPPDATA%\\ai.fleet.bluesky-mcp\\backend-spawn.log"]
+}

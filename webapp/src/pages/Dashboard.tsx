@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import MockBadge from "../components/MockBadge";
+import { API } from "../lib/api";
 import {
   isOnboarded,
   MOCK_KPIS,
@@ -75,7 +76,7 @@ function StatCard({
 function Inner({ backendOk }: { backendOk: boolean | null }) {
   const { data: dash } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: () => fetch("/api/dashboard").then((r) => r.json()),
+    queryFn: () => fetch(API.dashboard).then((r) => r.json()),
     refetchInterval: 15_000,
   });
 
@@ -123,7 +124,7 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span
                 className={clsx(
-                  "text-xs px-2 py-0.5 rounded font-medium",
+                  "text-sm px-2 py-0.5 rounded font-medium",
                   dryRun
                     ? "bg-amber-500/20 text-amber-400"
                     : "bg-emerald-500/20 text-emerald-400",
@@ -132,7 +133,7 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
               >
                 {dryRun ? "DRY RUN" : "LIVE POSTING"}
               </span>
-              <span className="text-xs text-zinc-500">
+              <span className="text-sm text-zinc-400">
                 {onboarded ? "Instance configured" : "No Bluesky token yet"}
               </span>
             </div>
@@ -237,13 +238,13 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
               >
                 <div className="flex items-center gap-2 mb-1">
                   {it._mock && <MockBadge />}
-                  <span className="text-xs font-mono text-zinc-500">
+                  <span className="text-sm font-mono text-zinc-400">
                     #{it.id}
                   </span>
-                  <span className="text-xs text-zinc-400">{it.repo_id}</span>
+                  <span className="text-sm text-zinc-400">{it.repo_id}</span>
                   <span
                     className={clsx(
-                      "text-xs px-2 py-0.5 rounded ml-auto",
+                      "text-sm px-2 py-0.5 rounded ml-auto",
                       it.status === "pending" &&
                         "bg-amber-500/20 text-amber-400",
                       it.status === "approved" &&
@@ -266,7 +267,7 @@ function Inner({ backendOk }: { backendOk: boolean | null }) {
       ) : (
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
           <Inbox size={32} className="mx-auto mb-3 text-zinc-700" />
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             Outbox empty — queue from fleet-PR Drafts or Compose.
           </p>
         </div>

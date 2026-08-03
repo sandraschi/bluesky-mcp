@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.2",
   "name": "bluesky-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FastMCP 3.4+ Bluesky (AT Proto) bridge with human-approved outbox for fleet-PR drafts",
   "author": {
     "name": "Sandra Schieder"

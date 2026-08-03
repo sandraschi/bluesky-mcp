@@ -96,7 +96,7 @@ export default function HelpModal({
                     </a>
                   )}
                 </div>
-                <p className="text-sm text-zinc-500 mt-0.5">{item.desc}</p>
+                <p className="text-sm text-zinc-400 mt-0.5">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -117,7 +117,7 @@ export default function HelpModal({
             </p>
           </div>
 
-          <p className="text-xs text-zinc-600">
+          <p className="text-sm text-zinc-400">
             Full documentation: Help page in sidebar, or INSTALL.md in the repo
             root.
           </p>

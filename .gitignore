@@ -34,6 +34,7 @@ gen/
 dist/
 build/
 *.mcpb
+mcpb/
 mcpb/src/
 
 # Data / DB
@@ -54,19 +55,12 @@ data/
 Thumbs.db
 .idea/
 .vscode/
-
 # Logs / reports / backups
 *.log
 logs/
 reports/
 *.bak
 *.bak.*
-
-webapp/test-results/
-
-
-webapp/test-results/
-
 
 webapp/test-results/
 

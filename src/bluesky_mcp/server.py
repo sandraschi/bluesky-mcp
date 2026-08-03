@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,14 @@ if _skills_root.is_dir():
     mcp.add_provider(SkillsDirectoryProvider(roots=[_skills_root]))
 
 
+@mcp.resource("outbox://summary")
+def outbox_summary_resource() -> str:
+    """Live outbox summary (pending/total) as a resource."""
+    items = outbox.list_items()
+    pending = sum(1 for i in items if i.get("status") == "pending")
+    return f"Outbox: {pending} pending / {len(items)} total"
+
+
 @mcp.prompt()
 async def bluesky_outbox_prompt() -> str:
     """How to queue and publish fleet promotion drafts safely."""
@@ -48,7 +57,7 @@ async def bluesky_outbox_prompt() -> str:
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations={"readonly": False}, version="0.1.1")
 async def bluesky_social_tool(
     operation: str,
     status_text: str = "",
@@ -93,7 +102,20 @@ async def bluesky_social_tool(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={"readonly": True},
+    output_schema={
+        "type": "object",
+        "properties": {
+            "server": {"type": "string"},
+            "version": {"type": "string"},
+            "ports": {"type": "object"},
+            "dry_run": {"type": "boolean"},
+            "tools": {"type": "array", "items": {"type": "string"}},
+            "outbox_flow": {"type": "string"},
+        },
+    },
+)
 async def bluesky_help() -> dict:
     """Help for bluesky-mcp."""
     return {
@@ -106,13 +128,22 @@ async def bluesky_help() -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={"readonly": False},
+    output_schema={
+        "type": "object",
+        "properties": {
+            "success": {"type": "boolean"},
+            "message": {"type": "string"},
+        },
+    },
+)
 async def bluesky_shutdown() -> dict:
     """Signal graceful shutdown (process exit left to host)."""
     return {"success": True, "message": "Shutdown signal acknowledged"}
 
 
-@mcp.tool(app=True)
+@mcp.tool(app=True, annotations={"readonly": True})
 async def show_outbox_card() -> dict:
     """Rich Prefab card summarizing pending outbox drafts."""
     try:
@@ -140,11 +171,13 @@ async def show_outbox_card() -> dict:
             with Card(), CardContent():
                 Badge(row.get("repo_id") or "manual", color="violet")
                 Text((row.get("status_text") or "")[:160])
-    return app.output()
+    return app.output()  # type: ignore[attr-defined]  # prefab_ui provides output() at runtime
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if not any(isinstance(h, _RingHandler) for h in logging.getLogger().handlers):
+        logging.getLogger().addHandler(_RingHandler(level=logging.INFO))
     os.makedirs(cfg.data_dir, exist_ok=True)
     outbox._db()  # init schema
     log.info("bluesky-mcp starting port=%s dry_run=%s", cfg.backend_port, cfg.dry_run)
@@ -161,6 +194,8 @@ app.add_middleware(
         "https://tauri.localhost",
         "tauri://localhost",
     ],
+    allow_origin_regex=r"https?://(?:[a-zA-Z0-9-]+\.ts\.net|.*?\.tail-[a-f0-9]+\.ts\.net|tauri\.localhost|localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|100\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?$|^tauri://localhost$",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -175,6 +210,43 @@ async def health():
         "version": __version__,
         "dry_run": cfg.dry_run,
         "instance_configured": cfg.credentials_ready,
+        "ports": {"backend": cfg.backend_port, "frontend": 10761},
+    }
+
+
+@app.get("/api/status")
+@app.get("/api/v1/status")
+async def status():
+    items = outbox.list_items()
+    return {
+        "status": "ok",
+        "server": cfg.server_name,
+        "version": __version__,
+        "uptime_seconds": _uptime_seconds(),
+        "tool_count": 4,
+        "dry_run": cfg.dry_run,
+        "instance_configured": cfg.credentials_ready,
+        "outbox_total": len(items),
+        "ports": {"backend": cfg.backend_port, "frontend": 10761},
+    }
+
+
+@app.get("/api/v1/diagnostics")
+async def diagnostics():
+    return {
+        "status": "ok",
+        "server": cfg.server_name,
+        "version": __version__,
+        "uptime_seconds": _uptime_seconds(),
+        "tool_count": 4,
+        "tools": [
+            {"name": "bluesky_social_tool", "kind": "portmanteau"},
+            {"name": "bluesky_help", "kind": "solo"},
+            {"name": "bluesky_shutdown", "kind": "solo"},
+            {"name": "show_outbox_card", "kind": "prefab"},
+        ],
+        "system": {"windows": os.name == "nt", "dry_run": cfg.dry_run},
+        "errors": [],
         "ports": {"backend": cfg.backend_port, "frontend": 10761},
     }
 
@@ -354,6 +426,33 @@ async def api_compose_assist(body: ComposeAssistBody):
 
 
 _LOG_RING: list[dict[str, Any]] = []
+_LOG_RING_MAX = 500
+
+
+def _uptime_seconds() -> float:
+    return max(0.0, (time.time() - _START_TIME))
+
+
+class _RingHandler(logging.Handler):
+    """Append formatted records to the in-memory ring for GET /api/logs."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            _LOG_RING.append(
+                {
+                    "ts": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created)),
+                    "level": record.levelname,
+                    "source": record.name,
+                    "message": record.getMessage(),
+                }
+            )
+            if len(_LOG_RING) > _LOG_RING_MAX:
+                del _LOG_RING[: len(_LOG_RING) - _LOG_RING_MAX]
+        except Exception:
+            pass
+
+
+_START_TIME = time.time()
 
 
 @app.get("/api/logs")

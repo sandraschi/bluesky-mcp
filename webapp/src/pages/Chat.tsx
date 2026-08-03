@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Bot, Download, Eraser, Loader2, Send, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API } from "../lib/api";
 import { detectFirstProvider, portFromUrl } from "../lib/provider";
 import { useLLMStore } from "../store/llm";
 
@@ -46,6 +47,9 @@ const EXAMPLE_PROMPTS = [
   "Tighten this draft for kicad-mcp — useful pointer only",
   "Lint my draft for FLEET_PROMOTION violations",
   "What should I approve in the outbox today?",
+  "Write a launch post for libreoffice-mcp, no hype",
+  "Summarize the pending outbox drafts and their repos",
+  "Rewrite this as a reply that stays useful, not promotional",
 ];
 
 function loadHistory(): Message[] {
@@ -117,7 +121,7 @@ export default function Chat() {
   }, [setOllamaUrl]);
 
   useEffect(() => {
-    fetch("/api/skills")
+    fetch(API.skills)
       .then((r) => (r.ok ? r.json() : { skills: [] }))
       .then((data) => {
         if (data.skills?.length > 0) {
@@ -160,7 +164,7 @@ export default function Chat() {
 
     try {
       const providerPort = portFromUrl(ollamaUrl);
-      const r = await fetch("/api/llm/chat", {
+      const r = await fetch(API.llmChat, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -258,7 +262,7 @@ export default function Chat() {
           <p className="text-sm text-zinc-400 mt-0.5">
             Local LLM — compose & outbox assistant
             {skillName && (
-              <span className="ml-2 text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
+              <span className="ml-2 text-sm text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
                 skill:{skillName}
               </span>
             )}

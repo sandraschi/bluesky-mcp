@@ -40,7 +40,7 @@ Push-Location $ScriptRoot
 try { uv sync; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } } finally { Pop-Location }
 
 $env:BLUESKY_BACKEND_PORT = "$BackendPort"
-$backendCmd = "Set-Location '$ScriptRoot'; `$env:BLUESKY_BACKEND_PORT='$BackendPort'; uv run python -m bluesky_mcp"
+$backendCmd = "Set-Location '$ScriptRoot'; `$env:BLUESKY_BACKEND_PORT='$BackendPort'; `$env:PORT='$BackendPort'; uv run python -m bluesky_mcp"
 $BackendProc = Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", $WindowStyle, "-Command", $backendCmd -PassThru
 
 Write-Host "Waiting for backend on port $BackendPort..." -ForegroundColor Gray

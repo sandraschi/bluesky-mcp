@@ -56,6 +56,6 @@ test.describe("bluesky-mcp webapp + outbox e2e", () => {
     await expect(page.locator("pre")).toContainText("pending")
 
     await page.goto("/outbox")
-    await expect(page.getByText("Playwright enqueue")).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText("Playwright enqueue").first()).toBeVisible({ timeout: 10_000 })
   })
 })

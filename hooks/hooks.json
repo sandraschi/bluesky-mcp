@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "text",
+            "text": "## Session Context (Bluesky MCP)\n\nYou can queue, approve, and publish Bluesky posts through a human-gated outbox.\n\n**Before starting work:**\n1. Check pending drafts: bluesky_social_tool(operation=\"outbox_list\")\n2. Review recent activity: bluesky_social_tool(operation=\"notifications\")\n\n**At end of work:**\n- Enqueue drafts for human approval: bluesky_social_tool(operation=\"outbox_enqueue\", status_text=\"...\")\n- Never publish directly without outbox_approve first."
+          }
+        ]
+      }
+    ]
+  }
+}

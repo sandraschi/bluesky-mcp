@@ -1,0 +1,6 @@
+{
+  "name": "bluesky-mcp",
+  "version": "0.1.1",
+  "description": "Bluesky (AT Proto) MCP bridge with human-approved outbox for fleet-PR drafts",
+  "hooks": "../hooks/hooks.json"
+}

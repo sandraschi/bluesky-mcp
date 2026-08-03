@@ -37,6 +37,18 @@ Tone: [`FLEET_PROMOTION.md`](../mcp-central-docs/standards/FLEET_PROMOTION.md).
 
 ---
 
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Backend | FastAPI + FastMCP 3.4 (uvicorn, pydantic v2, httpx) |
+| Webapp | React 18 + Vite + TailwindCSS + Lucide + Framer Motion + Zustand + TanStack Query |
+| Storage | SQLite outbox + webhook event log |
+| Desktop | Tauri 2 (NSIS installer, embedded PyInstaller backend) |
+| Quality | ruff, biome, pyright, pytest + pytest-cov, Playwright e2e |
+
+---
+
 ## Quick start
 
 ```powershell
@@ -47,6 +59,19 @@ Copy-Item .env.example .env
 ```
 
 Dashboard: http://127.0.0.1:10761 · MCP: http://127.0.0.1:10760/mcp
+
+Claude Desktop / Cursor MCP config (stdio):
+
+```json
+{
+  "mcpServers": {
+    "bluesky-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "D:\\Dev\\repos\\bluesky-mcp", "python", "-m", "bluesky_mcp"]
+    }
+  }
+}
+```
 
 ---
 
@@ -60,6 +85,9 @@ Dashboard: http://127.0.0.1:10761 · MCP: http://127.0.0.1:10760/mcp
 | [docs/TOOLS.md](docs/TOOLS.md) | MCP + REST reference |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Lint, `just ci`, packaging |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptom → fix |
+| [llms.txt](llms.txt) / [llms-full.txt](llms-full.txt) | LLM index + full corpus |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+| [PRD.md](PRD.md) | Requirements + payload contract |
 
 ---
 

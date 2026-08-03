@@ -1,5 +1,5 @@
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
@@ -78,18 +78,63 @@ pub fn materialize_backend(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(bundled)
 }
 
-fn free_port(port: u16) {
+fn free_port(port: u16) -> bool {
     #[cfg(windows)]
     {
-        let script = format!(
-            "Get-NetTCPConnection -LocalPort {port} -ErrorAction SilentlyContinue | ForEach-Object {{ taskkill /F /PID $_.OwningProcess /T 2>$null }}"
-        );
+        // Multi-layer kill: image-name (catches zombies not holding the port) + port kill
+        let img_kill = "Stop-Process -Name 'bluesky-mcp-backend' -Force -ErrorAction SilentlyContinue; \
+             Stop-Process -Name 'bluesky-mcp-native' -Force -ErrorAction SilentlyContinue; \
+             taskkill /F /IM bluesky-mcp-backend.exe /T 2>$null; \
+             taskkill /F /IM bluesky-mcp-native.exe /T 2>$null";
         let _ = Command::new("powershell.exe")
-            .args(["-NoProfile", "-Command", &script])
+            .args(["-NoProfile", "-Command", img_kill])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status();
-        thread::sleep(Duration::from_millis(300));
+
+        let port_kill = format!(
+            "Get-NetTCPConnection -LocalPort {port} -ErrorAction SilentlyContinue | ForEach-Object {{ taskkill /F /PID $_.OwningProcess /T 2>$null }}"
+        );
+        let _ = Command::new("powershell.exe")
+            .args(["-NoProfile", "-Command", &port_kill])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+
+        // Poll up to 60s; re-kill at 5s if still occupied
+        let poll_script = format!(
+            "if (Get-NetTCPConnection -LocalPort {port} -ErrorAction SilentlyContinue) {{ 1 }} else {{ 0 }}"
+        );
+        for i in 0..60 {
+            let output = Command::new("powershell.exe")
+                .args(["-NoProfile", "-Command", &poll_script])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .output();
+            let occupied = output
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .and_then(|s| s.trim().parse::<u32>().ok())
+                .unwrap_or(1);
+            if occupied == 0 {
+                return true;
+            }
+            if i == 5 {
+                let _ = Command::new("powershell.exe")
+                    .args(["-NoProfile", "-Command", img_kill])
+                    .status();
+                let _ = Command::new("powershell.exe")
+                    .args(["-NoProfile", "-Command", &port_kill])
+                    .status();
+            }
+            thread::sleep(Duration::from_secs(1));
+        }
+        return false;
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = port;
+        true
     }
 }
 
@@ -102,7 +147,11 @@ fn stop_managed_child(state: &BackendProcess) {
 
 pub fn spawn_backend(app: AppHandle, state: &BackendProcess) -> Result<String, String> {
     stop_managed_child(state);
-    free_port(BACKEND_PORT);
+    if !free_port(BACKEND_PORT) {
+        let msg = format!("Could not free port {BACKEND_PORT} after 60s — TIME_WAIT not cleared");
+        log_line(&app, &msg);
+        return Err(msg);
+    }
     let backend_path = materialize_backend(&app)?;
     let workdir = app.path().executable_dir().ok().unwrap_or_else(|| {
         backend_path
@@ -122,19 +171,31 @@ pub fn spawn_backend(app: AppHandle, state: &BackendProcess) -> Result<String, S
     command
         .current_dir(&workdir)
         .env("PORT", BACKEND_PORT.to_string())
-        .env("MASTODON_BACKEND_PORT", BACKEND_PORT.to_string())
-        .env("MASTODON_TAURI", "1")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
+        .env("BLUESKY_BACKEND_PORT", BACKEND_PORT.to_string())
+        .env("BLUESKY_TAURI", "1")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x0800_0000);
     }
-    let child = command
+    let mut child = command
         .spawn()
         .map_err(|e| format!("spawn failed: {e}"))?;
+
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
     state.0.lock().unwrap().replace(child);
+
+    if let Some(out) = stdout {
+        let handle = app.clone();
+        thread::spawn(move || watch_backend_stream(out, handle));
+    }
+    if let Some(err) = stderr {
+        let handle = app.clone();
+        thread::spawn(move || watch_backend_stream(err, handle));
+    }
 
     let addr = SocketAddr::from_str(&format!("127.0.0.1:{BACKEND_PORT}")).unwrap();
     let app_health = app.clone();
@@ -171,4 +232,16 @@ pub fn spawn_backend(app: AppHandle, state: &BackendProcess) -> Result<String, S
     });
 
     Ok(format!("Backend starting on port {BACKEND_PORT}"))
+}
+
+fn watch_backend_stream<R: std::io::Read + Send + 'static>(stream: R, app: AppHandle) {
+    let reader = BufReader::new(stream);
+    let mut ready = false;
+    for line in reader.lines().map_while(Result::ok) {
+        log_line(&app, &line);
+        if !ready && (line.contains("Uvicorn running") || line.contains("Application startup complete")) {
+            ready = true;
+            let _ = app.emit("backend-status", "ready");
+        }
+    }
 }

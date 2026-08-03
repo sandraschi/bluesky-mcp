@@ -3,6 +3,7 @@ import { Check, Send, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MockBadge from "../components/MockBadge";
+import { API } from "../lib/api";
 import { isOnboarded, MOCK_OUTBOX_RECENT } from "../lib/mockOnboarding";
 
 type Item = {
@@ -20,7 +21,7 @@ export default function OutboxPage() {
   const [onboarded, setOnboarded] = useState(true);
 
   const load = () =>
-    fetch("/api/v1/outbox")
+    fetch(API.outbox)
       .then((r) => r.json())
       .then((d) => setItems(d.items || []));
 
@@ -31,11 +32,11 @@ export default function OutboxPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/health")
+    fetch(API.health)
       .then((r) => r.json())
       .then((h) => setOnboarded(isOnboarded(h)));
     const t = setInterval(() => {
-      fetch("/api/health")
+      fetch(API.health)
         .then((r) => r.json())
         .then((h) => setOnboarded(isOnboarded(h)));
     }, 15_000);
@@ -44,7 +45,7 @@ export default function OutboxPage() {
 
   const act = async (id: number, path: string) => {
     if (id < 0) return;
-    const r = await fetch(`/api/v1/outbox/${id}/${path}`, { method: "POST" });
+    const r = await fetch(`${API.outbox}/${id}/${path}`, { method: "POST" });
     const j = await r.json();
     setMsg(j.message || j.error || JSON.stringify(j));
     load();
@@ -56,7 +57,7 @@ export default function OutboxPage() {
   return (
     <div className="p-6 max-w-3xl" data-testid="outbox-page">
       <h1 className="text-xl font-semibold mb-1">Outbox</h1>
-      <p className="text-sm text-zinc-500 mb-4">
+      <p className="text-sm text-zinc-400 mb-4">
         Fleet-PR drafts land here. Approve, then publish (dry-run until
         BLUESKY_DRY_RUN=0).
       </p>
@@ -141,7 +142,7 @@ export default function OutboxPage() {
         ))}
       </div>
       {onboarded && items.length === 0 && (
-        <p className="text-sm text-zinc-500 mt-6 text-center">
+        <p className="text-sm text-zinc-400 mt-6 text-center">
           Outbox empty — queue from fleet-PR or Compose.
         </p>
       )}
