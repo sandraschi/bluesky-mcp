@@ -41,6 +41,12 @@ function Inner() {
     refetchInterval: 60_000,
   });
 
+  const { data: llmDiscover } = useQuery({
+    queryKey: ["llm-discover"],
+    queryFn: () => fetch(API.llmProviders).then((r) => r.json()),
+    refetchInterval: 60_000,
+  });
+
   const activeProvider =
     LLM_PROVIDERS.find(
       (p) => p.name === llmProvider && providers?.providers?.[p.name]?.detected,
@@ -243,6 +249,36 @@ function Inner() {
                 LM Studio
               </a>{" "}
               for Chat and Compose assist.
+            </p>
+          </div>
+        )}
+
+        {llmDiscover?.gpu?.detected && !activeProvider && (
+          <div
+            className="mt-3 bg-emerald-900/10 border border-emerald-800/30 rounded-lg px-4 py-3 flex items-center gap-2"
+            data-testid="gpu-opportunity"
+          >
+            <Cpu size={16} className="text-emerald-400 shrink-0" />
+            <p className="text-sm text-emerald-300">
+              High-performance GPU detected ({llmDiscover.gpu.name}). Install{" "}
+              <a
+                href="https://ollama.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-emerald-200"
+              >
+                Ollama
+              </a>{" "}
+              or{" "}
+              <a
+                href="https://lmstudio.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-emerald-200"
+              >
+                LM Studio
+              </a>{" "}
+              to unlock free local AI features.
             </p>
           </div>
         )}

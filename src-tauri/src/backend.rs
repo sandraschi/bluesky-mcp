@@ -81,11 +81,10 @@ pub fn materialize_backend(app: &AppHandle) -> Result<PathBuf, String> {
 fn free_port(port: u16) -> bool {
     #[cfg(windows)]
     {
-        // Multi-layer kill: image-name (catches zombies not holding the port) + port kill
+        // Multi-layer kill: backend image-name (catches zombies NOT holding the port) + port kill.
+        // NEVER kill the operator's own image ({repo}-native) — it matches this process.
         let img_kill = "Stop-Process -Name 'bluesky-mcp-backend' -Force -ErrorAction SilentlyContinue; \
-             Stop-Process -Name 'bluesky-mcp-native' -Force -ErrorAction SilentlyContinue; \
-             taskkill /F /IM bluesky-mcp-backend.exe /T 2>$null; \
-             taskkill /F /IM bluesky-mcp-native.exe /T 2>$null";
+             taskkill /F /IM bluesky-mcp-backend.exe /T 2>$null";
         let _ = Command::new("powershell.exe")
             .args(["-NoProfile", "-Command", img_kill])
             .stdout(Stdio::null())

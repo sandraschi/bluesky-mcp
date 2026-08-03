@@ -11,5 +11,6 @@ export const API = {
   notifications: `${API_BASE}/api/v1/notifications`,
   timeline: `${API_BASE}/api/v1/timeline`,
   llmChat: `${API_BASE}/api/llm/chat`,
+  llmProviders: `${API_BASE}/api/llm/providers`,
   composeAssist: `${API_BASE}/api/compose/assist`,
 } as const;

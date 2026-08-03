@@ -2,6 +2,20 @@
 
 ## v0.1.2 (2026-08-03) — assfix pass
 
+### Round 2 (fix all): NSIS build + certification
+
+- **First certified NSIS build**: `Bluesky MCP_0.1.1_x64-setup.exe` (28.8 MB), `just cua-nsis-test` 11/11 phases PASS (install → backend health → feature route → diagnostics → uninstall). See `BUILD_LOG.md`
+- **Fixed operator self-kill**: `backend.rs free_port()` killed the operator's own image (`bluesky-mcp-native` matched its own process name → app exited -1 ~8s after launch)
+- **Fixed runt PyInstaller exe**: `uv run pyinstaller` fell back to a uv ephemeral env (missing site-packages → 10.4 MB exe without httpx/fastapi). build.ps1 now runs `.venv\Scripts\pyinstaller.exe` explicitly with install fallback
+- **Frozen persistence**: `data/` now resolves to `%LOCALAPPDATA%\ai.fleet.bluesky-mcp` when frozen (was `_MEIPASS` temp dir)
+- **Spec hardening**: joserfc/h11/beartype/websockets/sqlite3/_strptime/_datetime hiddenimports, eager `_strptime`/`_datetime` imports, `fastmcp_slim-` dist-info keep
+- **GPU opportunity prompt**: `GET /api/llm/providers` now returns `gpu` (nvidia-smi); Settings shows "install Ollama/LM Studio" CTA when GPU detected but no provider running (`data-testid="gpu-opportunity"`)
+- **CUA script**: backend wait now configurable (`backend_max_retry`/`backend_retry_delay`) — onefile cold start needs >30s
+- **pre-commit**: hooks materialized (`.git/hooks/pre-commit`), `pre-commit` added to dev deps
+- **BUILD_LOG.md** created with 6 build failures + fixes documented
+
+### Round 1 (assess): SOTA plumbing
+
 - **Dual transport**: `python -m bluesky_mcp` now falls back to stdio (Claude Desktop/Cursor) when no `PORT`/`MCP_PORT` env; proxies to a running HTTP daemon when present (SOTA §2.3)
 - **CORS**: unconditional `allow_origin_regex` (Tailscale, LAN, tauri origins)
 - REST: added `GET /api/status`, `GET /api/v1/diagnostics` (CUA-NSIS), live `/api/logs` ring buffer

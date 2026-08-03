@@ -346,7 +346,41 @@ async def api_llm_providers():
         providers.append(
             {"name": name, "port": port, "detected": detected, "models": [m for m in models if m]}
         )
-    return {"providers": providers}
+    return {"providers": providers, "gpu": _detect_gpu()}
+
+
+def _detect_gpu() -> dict[str, Any]:
+    """Best-effort NVIDIA GPU detection via nvidia-smi (no shell, fixed argv)."""
+    import shutil
+    import subprocess
+
+    smi = shutil.which("nvidia-smi")
+    if not smi:
+        return {"detected": False}
+    try:
+        out = subprocess.run(
+            [
+                smi,
+                "--query-gpu=name,memory.total,driver_version",
+                "--format=csv,noheader",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if out.returncode != 0 or not out.stdout.strip():
+            return {"detected": False}
+        parts = [p.strip() for p in out.stdout.strip().split(",")]
+        if not parts or not parts[0]:
+            return {"detected": False}
+        return {
+            "detected": True,
+            "name": parts[0],
+            "memory_total": parts[1] if len(parts) > 1 else "",
+            "driver_version": parts[2] if len(parts) > 2 else "",
+        }
+    except Exception:
+        return {"detected": False}
 
 
 class ChatBody(BaseModel):

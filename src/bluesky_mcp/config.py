@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -13,6 +14,10 @@ load_dotenv()
 
 
 def _default_data_dir() -> str:
+    if getattr(sys, "frozen", False):
+        # PyInstaller onefile: repo-relative paths resolve into the throwaway
+        # _MEIPASS temp dir. Persist under %LOCALAPPDATA%/{identifier} instead.
+        return str(Path(os.environ.get("LOCALAPPDATA", Path.home())) / "ai.fleet.bluesky-mcp")
     return str(Path(__file__).resolve().parents[2] / "data")
 
 

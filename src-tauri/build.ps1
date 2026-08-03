@@ -10,6 +10,19 @@ New-Item -ItemType Directory -Force -Path $ResourceDir, $DevDir | Out-Null
 Write-Host "=== ${RepoName} Tauri Release Build ===" -ForegroundColor Cyan
 Write-Host "Ports: backend 10760 / frontend 10761" -ForegroundColor Gray
 
+# Step 0: Verify API_BASE matches backend port (catches "Failed to fetch" before Tauri build)
+$apiFile = Join-Path $Root "webapp\src\lib\api.ts"
+if (Test-Path $apiFile) {
+    $apiContent = Get-Content $apiFile -Raw
+    if ($apiContent -match "127.0.0.1:(\d+)") {
+        $apiPort = [int]$Matches[1]
+        if ($apiPort -ne 10760) {
+            throw "API_BASE in $apiFile points to port $apiPort but backend serves on 10760. In dev Vite proxies work, in prod/NSIS this gives 'Failed to fetch'."
+        }
+        Write-Host "  API_BASE port: $apiPort (matches backend) OK" -ForegroundColor Green
+    }
+}
+
 # Step 1: Frontend build
 $frontend = Join-Path $Root "webapp"
 if (-not (Test-Path "$frontend\package.json")) {
@@ -40,7 +53,27 @@ if (-not (Test-Path $specFile)) {
     throw "Missing $specFile - add PyInstaller spec before build-native (see mcp-central-docs/standards/rules/tauri_nsis_building.md)"
 }
 Push-Location $Root
-uv run pyinstaller "$specFile" --clean --noconfirm
+# Patch fastmcp to not crash on missing metadata (dist-info stripped below)
+$fm = "$Root\.venv\Lib\site-packages\fastmcp\__init__.py"
+if (Test-Path $fm) {
+    $c = Get-Content $fm -Raw
+    if ($c -match 'except PackageNotFoundError:\s+    __version__ = _version\("fastmcp"\)') {
+        $c = $c -replace 'except PackageNotFoundError:\s+    __version__ = _version\("fastmcp"\)', 'except PackageNotFoundError:
+    try:
+        __version__ = _version("fastmcp")
+    except PackageNotFoundError:
+        __version__ = "0.0.0"'
+        Set-Content -Path $fm -Value $c -Encoding utf8
+        Write-Host "  Patched fastmcp metadata fallback" -ForegroundColor Yellow
+    }
+}
+# Ensure pyinstaller runs in the project venv, not a uv ephemeral env (missing site-packages = runt exe)
+$pyiExe = "$Root\.venv\Scripts\pyinstaller.exe"
+if (-not (Test-Path $pyiExe)) {
+    Write-Host "  Installing pyinstaller in project venv..." -ForegroundColor Yellow
+    uv add --dev pyinstaller
+}
+& $pyiExe "$specFile" --clean --noconfirm
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed with exit code $LASTEXITCODE" }
 Pop-Location
 

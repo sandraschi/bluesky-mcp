@@ -16,6 +16,8 @@
   "sidebar_click_x": 30,
   "sidebar_first_y": 90,
   "sidebar_step_y": 55,
+  "backend_max_retry": 20,
+  "backend_retry_delay": 3,
   "connected_badge_text": "Backend online",
   "backend_module": "bluesky_mcp.server",
   "log_file_paths": ["%LOCALAPPDATA%\\ai.fleet.bluesky-mcp\\backend-spawn.log"]

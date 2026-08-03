@@ -6,6 +6,8 @@ Dual transport (tauri_nsis_building.md):
 - otherwise             -> stdio FastMCP (Claude Desktop / Cursor)
 """
 
+import _datetime  # noqa: F401  # type: ignore[import-not-found]  # PyInstaller stdlib C ext (TAURI_PRODUCTION_PITFALLS E)
+import _strptime  # noqa: F401  # type: ignore[import-not-found]  # PyInstaller stdlib C ext (TAURI_PRODUCTION_PITFALLS E)
 import asyncio
 import os
 
