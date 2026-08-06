@@ -27,7 +27,11 @@ $portState = Resolve-FleetPortConflict @portResolve
 if ($portState.Action -eq 'Blocked') { exit 1 }
 if ($portState.Reuse) { return }
 
-if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
+if ($Headless -and -not $env:BLUESKY_MCP_HEADLESS_HANDOFF) {
+    # Env-marker guard: a hidden child's window title never contains 'Hidden'
+    # (it is the exe path), so a title check recurses forever. The marker
+    # survives Start-Process env inheritance and stops re-handoff.
+    $env:BLUESKY_MCP_HEADLESS_HANDOFF = '1'
     Start-Process powershell -ArgumentList '-NoProfile', '-File', $PSCommandPath, '-Headless' -WindowStyle Hidden
     exit
 }
