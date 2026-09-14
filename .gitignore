@@ -34,7 +34,6 @@ gen/
 dist/
 build/
 *.mcpb
-mcpb/
 mcpb/src/
 
 # Data / DB
@@ -63,4 +62,3 @@ reports/
 *.bak.*
 
 webapp/test-results/
-
