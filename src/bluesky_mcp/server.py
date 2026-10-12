@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
@@ -346,7 +347,7 @@ async def api_llm_providers():
         providers.append(
             {"name": name, "port": port, "detected": detected, "models": [m for m in models if m]}
         )
-    return {"providers": providers, "gpu": _detect_gpu()}
+    return {"providers": providers, "gpu": await asyncio.to_thread(_detect_gpu)}
 
 
 def _detect_gpu() -> dict[str, Any]:
