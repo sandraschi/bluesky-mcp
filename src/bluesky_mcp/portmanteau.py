@@ -1,4 +1,4 @@
-"""bluesky_social portmanteau tool — full ops, no planned stubs."""
+"""bluesky_social portmanteau tool - full ops, no planned stubs."""
 
 from __future__ import annotations
 
@@ -113,14 +113,14 @@ async def bluesky_social(
             outbox.mark_published(outbox_id, str(result.get("id", "")))
         elif result.get("success") and result.get("dry_run"):
             result["message"] = (
-                "dry_run publish OK — set BLUESKY_DRY_RUN=0 to post for real after approve"
+                "dry_run publish OK - set BLUESKY_DRY_RUN=0 to post for real after approve"
             )
         return result
 
     if op == "post":
         if cfg.require_outbox_approval and not outbox_id:
             return err_response(
-                "direct post blocked — enqueue to outbox, approve, then outbox_publish "
+                "direct post blocked - enqueue to outbox, approve, then outbox_publish "
                 "(or set BLUESKY_REQUIRE_OUTBOX_APPROVAL=0 for interactive compose)",
                 "approval_required",
             )

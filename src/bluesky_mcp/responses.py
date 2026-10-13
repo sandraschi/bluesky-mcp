@@ -1,4 +1,4 @@
-"""Shared dialogic response helpers — Tool Design §7.1 Pattern 3."""
+"""Shared dialogic response helpers - Tool Design §7.1 Pattern 3."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ def err_response(
     error_type: str = "general",
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """Auto-logging error response — traceback captured when called from an except block.
+    """Auto-logging error response - traceback captured when called from an except block.
 
     ## Return Format
     {"success": False, "error": str, "error_type": str, ...kwargs}

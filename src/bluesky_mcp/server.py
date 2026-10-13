@@ -1,4 +1,4 @@
-"""bluesky-mcp FastMCP + FastAPI server — ports 10760 (HTTP/MCP)."""
+"""bluesky-mcp FastMCP + FastAPI server - ports 10760 (HTTP/MCP)."""
 
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ async def bluesky_outbox_prompt() -> str:
         "Use bluesky_social_tool outbox_enqueue for fleet-PR payloads.\n"
         "Never publish without human outbox_approve.\n"
         "Respect BLUESKY_DRY_RUN=1 unless explicitly told to go live.\n"
-        "Tone: FLEET_PROMOTION.md — useful pointer, no hype, no 'written by AI'."
+        "Tone: FLEET_PROMOTION.md - useful pointer, no hype, no 'written by AI'."
     )
 
 
@@ -74,7 +74,7 @@ async def bluesky_social_tool(
     media_description: str = "",
     cid: str = "",
 ) -> dict:
-    """Portmanteau: post/timeline/outbox_* — fleet drafts use outbox_enqueue → approve → publish.
+    """Portmanteau: post/timeline/outbox_* - fleet drafts use outbox_enqueue → approve → publish.
 
     ## Return Format
 
@@ -158,7 +158,7 @@ async def show_outbox_card() -> dict:
             "prefab": False,
             "pending": pending,
             "total": len(items),
-            "message": "prefab-ui not installed — raw summary",
+            "message": "prefab-ui not installed - raw summary",
         }
 
     items = outbox.list_items()
@@ -167,7 +167,7 @@ async def show_outbox_card() -> dict:
     with app:
         Heading("Outbox", level=2)
         Text(f"{len(pending)} pending · {len(items)} total")
-        Muted("Dry-run default — approve then publish")
+        Muted("Dry-run default - approve then publish")
         for row in pending[:8]:
             with Card(), CardContent():
                 Badge(row.get("repo_id") or "manual", color="violet")
@@ -433,7 +433,7 @@ class ComposeAssistBody(BaseModel):
 
 @app.post("/api/compose/assist")
 async def api_compose_assist(body: ComposeAssistBody):
-    """AI-assisted compose — returns suggested status text (local LLM)."""
+    """AI-assisted compose - returns suggested status text (local LLM)."""
     skill = ""
     skill_path = Path(__file__).parent / "skills" / "bluesky-outbox" / "SKILL.md"
     if skill_path.is_file():
@@ -560,7 +560,7 @@ async def api_webhook_inbound(
     body: WebhookInboundBody,
     x_bluesky_webhook_secret: str | None = Header(default=None, alias="X-Bluesky-Webhook-Secret"),
 ):
-    """Fleet inbound webhook — set BLUESKY_WEBHOOK_SECRET; header X-Bluesky-Webhook-Secret."""
+    """Fleet inbound webhook - set BLUESKY_WEBHOOK_SECRET; header X-Bluesky-Webhook-Secret."""
     if not webhooks.verify_secret(x_bluesky_webhook_secret):
         return {"success": False, "error": "invalid or missing webhook secret"}
     payload = (

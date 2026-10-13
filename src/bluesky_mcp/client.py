@@ -1,4 +1,4 @@
-"""Thin Bluesky AT Proto client — always respects dry_run."""
+"""Thin Bluesky AT Proto client - always respects dry_run."""
 
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ async def create_status(
         return {
             "success": True,
             "dry_run": True,
-            "message": "dry_run — not posted",
+            "message": "dry_run - not posted",
             "status_text": status_text,
             "in_reply_to_id": in_reply_to_id,
             "media_ids": media_ids or [],
@@ -204,7 +204,7 @@ async def boost_status(
         return {
             "success": True,
             "dry_run": True,
-            "message": "dry_run — repost not sent",
+            "message": "dry_run - repost not sent",
             "status_id": status_id,
             "id": "dry-run-repost",
         }
@@ -268,7 +268,7 @@ async def upload_media(
         return {
             "success": True,
             "dry_run": True,
-            "message": "dry_run — blob not uploaded",
+            "message": "dry_run - blob not uploaded",
             "path": str(file_path),
             "id": "dry-run-media",
             "description": description,
@@ -323,7 +323,7 @@ async def get_notifications(limit: int = 20) -> dict[str, Any]:
             "success": True,
             "dry_run": True,
             "notifications": [],
-            "message": "dry_run — notifications empty without credentials",
+            "message": "dry_run - notifications empty without credentials",
         }
     if not cfg.credentials_ready:
         return {"success": False, "error": "not configured"}
@@ -392,12 +392,12 @@ async def get_timeline(timeline: str = "home", limit: int = 20) -> dict[str, Any
 
 
 async def push_subscription_get() -> dict[str, Any]:
-    """Bluesky has no Mastodon-style Web Push subscription API — declare N/A."""
+    """Bluesky has no Mastodon-style Web Push subscription API - declare N/A."""
     cfg = get_settings()
     return {
         "success": True,
         "subscription": None,
-        "message": "N/A — Bluesky AT Proto does not expose Mastodon-style Web Push subscriptions",
+        "message": "N/A - Bluesky AT Proto does not expose Mastodon-style Web Push subscriptions",
         "dry_run": cfg.dry_run,
         "na": True,
     }
